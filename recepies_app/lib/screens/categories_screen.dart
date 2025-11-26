@@ -37,7 +37,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       setState(() {
         _isLoading = false;
       });
-      // за лабот е доволно Snackbar
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -75,54 +75,67 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
-        actions: [
-          IconButton(
-            onPressed: _openRandomMeal,
-            icon: const Icon(Icons.shuffle),
-            tooltip: 'Random recipe of the day',
-          ),
-        ],
+        title: const Text('Categoriess'),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: TextField(
-              decoration: const InputDecoration(
-                labelText: 'Search categories',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: _filterCategories,
+body: Column(
+  children: [
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: TextField(
+        decoration: const InputDecoration(
+          labelText: 'Search categories',
+          border: OutlineInputBorder(),
+          prefixIcon: Icon(Icons.search),
+        ),
+        onChanged: _filterCategories,
+      ),
+    ),
+
+    Expanded(
+      child: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: _filtered.length,
+              itemBuilder: (context, index) {
+                final cat = _filtered[index];
+                return CategoryCard(
+                  category: cat,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MealsByCategoryScreen(
+                          categoryName: cat.name,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
+    ),
+
+    // za random meal
+    Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: _openRandomMeal,
+          icon: const Icon(Icons.shuffle),
+          label: const Text(
+            'Random Recipe of the Day :)',
+            style: TextStyle(fontSize: 16),
           ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) {
-                      final cat = _filtered[index];
-                      return CategoryCard(
-                        category: cat,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MealsByCategoryScreen(
-                                categoryName: cat.name,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
           ),
-        ],
+        ),
       ),
+    ),
+  ],
+),
+
     );
   }
 }
