@@ -3,6 +3,7 @@ import 'package:recepies_app/screens/meals_detail_screen.dart';
 import '../models/meal_summary.dart';
 import '../services/meal_api_service.dart';
 import '../widgets/meal_card.dart';
+import '../services/favourites_service.dart';
 
 class MealsByCategoryScreen extends StatefulWidget {
   final String categoryName;
@@ -18,14 +19,19 @@ class MealsByCategoryScreen extends StatefulWidget {
 
 class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
   final MealApiService apiService = MealApiService();
+  //lab4
+  final FavoritesService favoritesService = FavoritesService();
   List<MealSummary> _meals = [];
   List<MealSummary> _filtered = [];
   bool _isLoading = true;
+  Set<String> _favoriteIds = {};
 
   @override
   void initState() {
     super.initState();
     _loadMeals();
+    //lab4
+    _loadFavorites();
   }
 
   Future<void> _loadMeals() async {
@@ -45,6 +51,29 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
       );
     }
   }
+  //lab 4
+   Future<void> _loadFavorites() async {
+    final favs = await favoritesService.getFavorites();
+    if (!mounted) return;
+    setState(() {
+      _favoriteIds = favs.map((m) => m.id).toSet();
+    });
+  }
+  Future<void> _toggleFavorite(MealSummary meal) async {
+    await favoritesService.toggleFavorite(meal);
+    await _loadFavorites();
+
+    if (!mounted) return;
+    final isFavNow = _favoriteIds.contains(meal.id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isFavNow ? 'Added to favorites ❤️' : 'Removed from favorites 💔'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+
 
   void _filterMealsLocal(String query) {
     setState(() {
@@ -90,6 +119,8 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
                     itemCount: _filtered.length,
                     itemBuilder: (context, index) {
                       final meal = _filtered[index];
+                    //lab 4
+                    final isFav = _favoriteIds.contains(meal.id);
                       return MealCard(
                         meal: meal,
                         onTap: () {
@@ -101,6 +132,8 @@ class _MealsByCategoryScreenState extends State<MealsByCategoryScreen> {
                             ),
                           );
                         },
+                        isFavorite: isFav,
+                        onToggleFavorite: () => _toggleFavorite(meal),
                       );
                     },
                   ),
